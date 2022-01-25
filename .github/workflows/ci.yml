@@ -11,6 +11,7 @@ on:
 jobs:
  build:
     name: Build
+    run: echo "Hello tag ${{ github.ref }}"
     strategy:
       fail-fast: false
       matrix:
