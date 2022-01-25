@@ -1,7 +1,10 @@
 name: Release-Build-Publish
 
 on:
-  push
+  push:
+    branches:
+      - 'hddcoin'
+      - '!master'
 
 jobs:
  build:
