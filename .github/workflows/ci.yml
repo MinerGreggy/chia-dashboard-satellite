@@ -3,7 +3,7 @@ name: Release-Build-Publish
 on:
   push:
     tags:
-      - 1.*
+      - '*'
 
 jobs:
  build:
