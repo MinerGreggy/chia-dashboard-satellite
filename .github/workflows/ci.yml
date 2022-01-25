@@ -1,8 +1,10 @@
-on: push
-name: CI
+name: Release-Build-Publish
+
+on:
+  push
 
 jobs:
-  build:
+ build:
     name: Build
     strategy:
       fail-fast: false
@@ -11,6 +13,7 @@ jobs:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
 
     runs-on: ${{ matrix.os }}
+    if: "contains(github.event.head_commit.message, 'NewRelease')"
     steps:
       - name: Checkout the repo
         uses: actions/checkout@v2
@@ -28,76 +31,47 @@ jobs:
           name: release-archive-${{ matrix.os }}
           path: build/*.zip
 
-  build-and-push-image:
-    name: Build and push image
-    needs: build
-    if: startsWith(github.ref, 'refs/tags/')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    env:
-      REGISTRY: ghcr.io
-      IMAGE_NAME: ${{ github.repository }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Log in to the Container registry
-        uses: docker/login-action@v1
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata for Docker
-        id: meta
-        uses: docker/metadata-action@v3
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          push: ${{ startsWith(github.ref, 'refs/tags/') }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-
-  publish-release:
-    name: Publish release
-    needs: build
-    if: startsWith(github.ref, 'refs/tags/')
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout the repo
-        uses: actions/checkout@v2
-      - name: Set up Node.js 16.x
-        uses: actions/setup-node@v2
+ release-npm:
+   runs-on: ubuntu-latest
+   needs: build
+   if: "contains(github.event.head_commit.message, 'NewRelease')"
+   steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
         with:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
-      - name: Publish to npm
+      - name: Publish To NPM
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish --access public
-      - name: Fetch release archives
-        uses: actions/download-artifact@v2
-      - name: Get the tag name
-        id: tag
-        run: echo ::set-output name=TAG::${GITHUB_REF/refs\/tags\//}
-      - name: Create github release
-        uses: felixbrucker/github-actions/publish-release@master
+
+      - uses: flood-io/is-published-on-npm@v1
+        id: is-published
+
+      - name: Upadate Release Tags
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          args: --name Chia-Dashboard-Satellite
-      - uses: AButler/upload-release-assets@v2.0
+          tag_name: ${{ steps.is-published.outputs.version }}
+          release_name: Release ${{ steps.is-published.outputs.version }}
+          draft: false
+          prerelease: false
+
+      - run: echo "Dashboard is at version ${{ steps.is-published.outputs.version }}"
+
+      - name: Download Files For Adding To The Release Assets
+        uses: actions/download-artifact@v2
+      - name: View Downloaded Content
+        run: ls -R
+
+      - name: Upload binaries to release
+        uses: AButler/upload-release-assets@v2.0
         with:
           files: 'release-archive-*/*.zip'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          release-tag: ${{ steps.tag.outputs.TAG }}
+          release-tag: ${{ steps.is-published.outputs.version }}
+
+
+
