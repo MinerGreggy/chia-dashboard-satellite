@@ -6,7 +6,7 @@ on:
       - 'hddcoin'
       - '!master'
     tags:
-      - '*'
+      - 1.*
 
 jobs:
  build:
