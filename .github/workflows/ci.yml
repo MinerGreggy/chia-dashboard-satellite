@@ -19,25 +19,10 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     
-    run: echo "Hello tag ${{ github.ref }}"
-
     if: startsWith(github.ref, 'refs/tags/')
     steps:
-      - name: Checkout the repo
-        uses: actions/checkout@v2
-      - name: Set up Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
-        with:
-          node-version: ${{ matrix.node-version }}
-      - name: yarn install
-        run: yarn install
-      - name: Package release archive
-        run: yarn run package
-      - name: Save release archive
-        uses: actions/upload-artifact@v2
-        with:
-          name: release-archive-${{ matrix.os }}
-          path: build/*.zip
+      - name: Only do this when tagged
+        run: echo "Hello tag ${{ github.ref }}"
 
  build-and-push-image:
     name: Build and push image
