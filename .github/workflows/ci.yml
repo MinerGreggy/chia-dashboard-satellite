@@ -20,6 +20,4 @@ jobs:
     runs-on: ${{ matrix.os }}
     
     steps:
-      - name: Only do this when tagged
-        run: echo "Hello tag ${{ github.ref }}"
-
+      - run: echo "Hello tag ${{ github.ref }}"
