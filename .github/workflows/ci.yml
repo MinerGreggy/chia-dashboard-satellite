@@ -19,8 +19,8 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     
-    - name: Only do this when tagged
-      run: echo "Hello tag ${{ github.ref }}"
+    name: Only do this when tagged
+    run: echo "Hello tag ${{ github.ref }}"
 
     if: startsWith(github.ref, 'refs/tags/')
     steps:
