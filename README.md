@@ -23,11 +23,11 @@ npm update -g hddcoin-dashboard-satellite
 
 ## Docker Image of satellite
 
-Docker image are also available on docker hub.
+Docker image are also available on ghcr.
 Pull
 
 ```bash
-docker pull minergreggy/hddcoin-docker-dashboard:latest
+docker pull ghcr.io/minergreggy/hddcoin-dashboard-satellite:latest
 ```
 
 OR
@@ -35,7 +35,7 @@ OR
 Just add into the docker run or docker-compose
 
 ```bash
-minergreggy/hddcoin-docker-dashboard:latest
+ghcr.io/minergreggy/hddcoin-dashboard-satellite:latest
 ```
 
 ## Donate
